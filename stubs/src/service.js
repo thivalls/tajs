@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
-import { lutimes } from 'node:fs';
 import fs from 'node:fs/promises';
+import fsCheck from 'node:fs';
 
 export default class Service {
 
@@ -15,7 +15,9 @@ export default class Service {
         return hash.digest('hex'); 
     }
 
-    create({username, password}) {
+    async create({username, password}) {
+        if(! (await fsCheck.existsSync(this.#filename))) throw new Error('File does not exist');
+
         const data = JSON.stringify({
             username,
             password: this.#hashPassword(password),
@@ -26,6 +28,8 @@ export default class Service {
     }
 
     async read() {
+        if (! (await fsCheck.existsSync(this.#filename)) ) return [];
+
         const lines = (await fs.readFile(this.#filename, 'utf-8'))
             .split('\n')
             .filter(line => !!line);

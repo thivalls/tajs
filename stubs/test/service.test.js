@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import Service from "../src/service.js";
 import fs from 'node:fs/promises';
+import fsCheck from 'node:fs';
 
 describe('# Suite for stub service', () => {
     
@@ -12,14 +13,8 @@ describe('# Suite for stub service', () => {
     });
 
     describe('# Suite for read', () => {
-        it('should read users from file', async () => {
-            jest.spyOn(fs, fs.readFile.name).mockResolvedValue('');
-            const results = await _service.read();
-            expect(results).toEqual([]);
-        });
-
-        it('Should return user data without password in response', async () => {
-            const dbData = [
+        function dbData() {
+            return [
                 { 
                     username: 'user1', 
                     password: 'pass1', 
@@ -31,16 +26,39 @@ describe('# Suite for stub service', () => {
                     createdAt: new Date().toISOString() 
                 },
             ];
+        }
 
-            const fileContent = dbData
+        function usersStub(data) {
+            return data
                 .map(item => JSON.stringify(item).concat('\n')).join('')
+        }
 
-            jest.spyOn(fs, 'readFile').mockResolvedValue(fileContent);
+        it('should return empty array if it has no results and file exist', async () => {
+            jest.spyOn(fsCheck, 'existsSync').mockResolvedValueOnce(true);
+            const fsSpy = jest.spyOn(fs, fs.readFile.name).mockResolvedValue('');
+            const results = await _service.read();
+            expect(results).toEqual([]);
+        });
+
+        it('should return empty array if file does not exists', async () => {
+            jest.spyOn(fsCheck, 'existsSync').mockResolvedValueOnce(false);
+            const fsSpy = jest.spyOn(fs, 'readFile');
+            const results = await _service.read();
+            expect(results).toEqual([]);
+            expect(fsSpy).not.toHaveBeenCalled();
+        });
+
+        it('Should return user data without password in response', async () => {
+            const items = dbData();
+
+            jest.spyOn(fsCheck, 'existsSync').mockResolvedValueOnce(true);
+            const fsSpy = jest.spyOn(fs, 'readFile').mockResolvedValue(usersStub(items));
 
             const results = await _service.read();
-            const expected = dbData.map(({password, ...rest}) => ({...rest}));
+            const expected = items.map(({password, ...rest}) => ({...rest}));
             
             expect(results).toStrictEqual(expected);
+            expect(fsSpy).toHaveBeenCalled();
         });
     });
 });
