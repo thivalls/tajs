@@ -58,7 +58,7 @@ describe('# Suite for stub service', () => {
             const expected = items.map(({password, ...rest}) => ({...rest}));
             
             expect(results).toStrictEqual(expected);
-            expect(fsSpy).toHaveBeenCalled();
+            expect(fsSpy).toBeCalledTimes(1);
         });
     });
 });
