@@ -3,7 +3,7 @@ import server from "./server.js";
 if(process.env.NODE_ENV !== 'test') {
     server.listen(process.env.PORT, () => {
         const serverInfo = server.address();
-        console.log(`server running at http://localhost${serverInfo.address}${serverInfo.port}`);
+        console.log(`server running at ${serverInfo.address}:${serverInfo.port}`);
     })
 }
 
